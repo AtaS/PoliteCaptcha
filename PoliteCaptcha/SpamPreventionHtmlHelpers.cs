@@ -30,7 +30,21 @@ namespace PoliteCaptcha
             if (useCaptcha)
                 return captchaGenerator.Generate(htmlHelper, fallbackMessage);
 
-            return htmlHelper.Hidden(Const.NoCaptchaChallengeField, Guid.NewGuid().ToString("N"));
+            //Session hacks
+            var session = htmlHelper.ViewContext.HttpContext.Session;
+            var guidKey = "_" + Const.NoCaptchaChallengeField;
+            string guid;
+
+            if (session[guidKey] != null)
+                guid = (string) session[guidKey];
+            else
+                guid = Guid.NewGuid().ToString("N");
+
+            //set guid into session for using again later
+            session[guidKey] = guid;
+            //--
+
+            return htmlHelper.Hidden(Const.NoCaptchaChallengeField, guid);
         }
 
         /// <summary>

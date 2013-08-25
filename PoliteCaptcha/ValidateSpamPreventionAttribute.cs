@@ -83,9 +83,28 @@ namespace PoliteCaptcha
             if (string.IsNullOrWhiteSpace(noCaptchaResponse))
                 return false;
 
+            //Session hacks
+            var session = httpContext.Session;
+            const string guidKey = "_" + Const.NoCaptchaChallengeField;
+
+            if (session[guidKey] == null)
+                return false;
+
+            var guid = (string) session[guidKey];
+
+            if (guid != noCaptchaChallenge)
+                return false;
+            //--
+
             noCaptchaResponse = new string(noCaptchaResponse.Reverse().ToArray());
 
-            return noCaptchaChallenge.Equals(noCaptchaResponse, StringComparison.OrdinalIgnoreCase);
+            if (!noCaptchaChallenge.Equals(noCaptchaResponse, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            //And remove guidkey from session to stop brute-force form attacks
+            session.Remove(guidKey);
+
+            return true;
         }
     }
 }
